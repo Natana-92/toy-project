@@ -7,6 +7,7 @@ export type EverydayComparison = {
 const EVERYDAY_ITEMS = [
   { label: "자장면", emoji: "🍜", unitPriceInManwon: 0.7 },
   { label: "치킨", emoji: "🍗", unitPriceInManwon: 2 },
+  { label: "피자", emoji: "🍕", unitPriceInManwon: 2.5 },
 ];
 
 /** 금액(만원)을 자장면·치킨 같은 일상 소비 단위 개수로 환산한다. */

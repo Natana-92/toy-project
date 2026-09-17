@@ -3,6 +3,7 @@ import { listEverydayComparisons } from "@/lib/apt-trades/everyday-comparison";
 const UNIT_BY_LABEL: Record<string, string> = {
   자장면: "그릇",
   치킨: "마리",
+  피자: "판",
 };
 
 /** 금액 차이를 자장면·치킨 같은 익숙한 소비 단위 개수로 보여준다. */

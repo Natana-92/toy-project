@@ -2,12 +2,13 @@ import { describe, expect, it } from "vitest";
 import { listEverydayComparisons } from "./everyday-comparison";
 
 describe("listEverydayComparisons", () => {
-  it("금액(만원)을 자장면·치킨 같은 일상 소비 단위 개수로 환산한다", () => {
-    const result = listEverydayComparisons(7);
+  it("금액(만원)을 자장면·치킨·피자 같은 일상 소비 단위 개수로 환산한다", () => {
+    const result = listEverydayComparisons(300);
 
     expect(result).toEqual([
-      { label: "자장면", emoji: "🍜", count: 10 },
-      { label: "치킨", emoji: "🍗", count: 3.5 },
+      { label: "자장면", emoji: "🍜", count: 300 / 0.7 },
+      { label: "치킨", emoji: "🍗", count: 150 },
+      { label: "피자", emoji: "🍕", count: 120 },
     ]);
   });
 
