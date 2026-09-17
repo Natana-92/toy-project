@@ -20,7 +20,7 @@ export function EverydayComparisonList({ amountInManwon }: { amountInManwon: num
             {item.emoji}
           </span>
           <span>
-            {item.label} {Math.round(item.count).toLocaleString("ko-KR")}
+            {item.label} {Math.floor(item.count).toLocaleString("ko-KR")}
             {UNIT_BY_LABEL[item.label] ?? "개"}
           </span>
         </li>
