@@ -15,6 +15,8 @@ const SAMPLE_XML = `<response>
         <dealYear>2016</dealYear>
         <dealMonth>3</dealMonth>
         <dealDay>15</dealDay>
+        <umdNm>숭인동</umdNm>
+        <jibun>766</jibun>
       </item>
       <item>
         <aptNm>푸르지오</aptNm>
@@ -23,6 +25,8 @@ const SAMPLE_XML = `<response>
         <dealYear>2016</dealYear>
         <dealMonth>3</dealMonth>
         <dealDay>2</dealDay>
+        <umdNm>창신동</umdNm>
+        <jibun>9-1</jibun>
       </item>
     </items>
     <numOfRows>10</numOfRows>
@@ -34,8 +38,26 @@ const SAMPLE_XML = `<response>
 describe("parseAptTradeXml", () => {
   it("정상 응답의 item들을 AptTrade 배열로 정규화한다", () => {
     expect(parseAptTradeXml(SAMPLE_XML)).toEqual([
-      { aptName: "래미안", exclusiveArea: 84.97, dealAmount: 72000, dealYear: 2016, dealMonth: 3, dealDay: 15 },
-      { aptName: "푸르지오", exclusiveArea: 59.92, dealAmount: 45500, dealYear: 2016, dealMonth: 3, dealDay: 2 },
+      {
+        aptName: "래미안",
+        exclusiveArea: 84.97,
+        dealAmount: 72000,
+        dealYear: 2016,
+        dealMonth: 3,
+        dealDay: 15,
+        dong: "숭인동",
+        jibun: "766",
+      },
+      {
+        aptName: "푸르지오",
+        exclusiveArea: 59.92,
+        dealAmount: 45500,
+        dealYear: 2016,
+        dealMonth: 3,
+        dealDay: 2,
+        dong: "창신동",
+        jibun: "9-1",
+      },
     ]);
   });
 
@@ -54,11 +76,22 @@ describe("parseAptTradeXml", () => {
         <dealYear>2016</dealYear>
         <dealMonth>3</dealMonth>
         <dealDay>15</dealDay>
+        <umdNm>숭인동</umdNm>
+        <jibun>766</jibun>
       </item>
     </items></body></response>`;
 
     expect(parseAptTradeXml(xml)).toEqual([
-      { aptName: "래미안", exclusiveArea: 84.97, dealAmount: 72000, dealYear: 2016, dealMonth: 3, dealDay: 15 },
+      {
+        aptName: "래미안",
+        exclusiveArea: 84.97,
+        dealAmount: 72000,
+        dealYear: 2016,
+        dealMonth: 3,
+        dealDay: 15,
+        dong: "숭인동",
+        jibun: "766",
+      },
     ]);
   });
 
@@ -100,8 +133,26 @@ describe("fetchMonthlyTrades", () => {
     });
 
     expect(result).toEqual([
-      { aptName: "래미안", exclusiveArea: 84.97, dealAmount: 72000, dealYear: 2016, dealMonth: 3, dealDay: 15 },
-      { aptName: "푸르지오", exclusiveArea: 59.92, dealAmount: 45500, dealYear: 2016, dealMonth: 3, dealDay: 2 },
+      {
+        aptName: "래미안",
+        exclusiveArea: 84.97,
+        dealAmount: 72000,
+        dealYear: 2016,
+        dealMonth: 3,
+        dealDay: 15,
+        dong: "숭인동",
+        jibun: "766",
+      },
+      {
+        aptName: "푸르지오",
+        exclusiveArea: 59.92,
+        dealAmount: 45500,
+        dealYear: 2016,
+        dealMonth: 3,
+        dealDay: 2,
+        dong: "창신동",
+        jibun: "9-1",
+      },
     ]);
 
     vi.unstubAllGlobals();
@@ -120,7 +171,7 @@ describe("fetchDistrictTrades", () => {
   it("시작 연월부터 기준 시점까지 매달 조회한 거래를 하나의 배열로 합친다", async () => {
     const xmlByYearMonth: Record<string, string> = {
       "201601": `<response><header><resultCode>000</resultCode></header><body><items>
-        <item><aptNm>1월단지</aptNm><excluUseAr>59.9</excluUseAr><dealAmount>10,000</dealAmount><dealYear>2016</dealYear><dealMonth>1</dealMonth><dealDay>1</dealDay></item>
+        <item><aptNm>1월단지</aptNm><excluUseAr>59.9</excluUseAr><dealAmount>10,000</dealAmount><dealYear>2016</dealYear><dealMonth>1</dealMonth><dealDay>1</dealDay><umdNm>역삼동</umdNm><jibun>1</jibun></item>
       </items></body></response>`,
       "201602": `<response><header><resultCode>000</resultCode></header><body><items></items></body></response>`,
     };
@@ -140,7 +191,16 @@ describe("fetchDistrictTrades", () => {
     });
 
     expect(result).toEqual([
-      { aptName: "1월단지", exclusiveArea: 59.9, dealAmount: 10000, dealYear: 2016, dealMonth: 1, dealDay: 1 },
+      {
+        aptName: "1월단지",
+        exclusiveArea: 59.9,
+        dealAmount: 10000,
+        dealYear: 2016,
+        dealMonth: 1,
+        dealDay: 1,
+        dong: "역삼동",
+        jibun: "1",
+      },
     ]);
 
     vi.unstubAllGlobals();

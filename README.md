@@ -26,9 +26,15 @@ bun dev
 ```bash
 # 공공데이터포털(data.go.kr)에서 "국토교통부_아파트 매매 실거래가 자료" API를 활용신청하면 발급됩니다.
 MOLIT_SERVICE_KEY=발급받은_인증키
+
+# 카카오 개발자센터(developers.kakao.com)에서 애플리케이션을 만들면 REST API 키와 JavaScript 키가
+# 함께 발급됩니다. 앱의 [제품 설정 > 카카오맵]에서 API를 활성화하고, [앱 설정 > 플랫폼]에
+# 사용할 도메인(http://localhost:3000, 실제 배포 도메인)을 등록해야 동작합니다.
+KAKAO_REST_API_KEY=발급받은_REST_API_키
+NEXT_PUBLIC_KAKAO_JS_KEY=발급받은_JavaScript_키
 ```
 
-키가 없으면 지역을 선택했을 때 "일시적으로 조회할 수 없습니다" 안내가 표시됩니다.
+`MOLIT_SERVICE_KEY`가 없으면 지역을 선택했을 때 "일시적으로 조회할 수 없습니다" 안내가, 카카오 키가 없거나 도메인이 등록되지 않았으면 단지를 선택했을 때 "지도를 표시할 수 없습니다"·"위치를 찾을 수 없습니다" 안내가 표시됩니다.
 
 ## 스크립트
 

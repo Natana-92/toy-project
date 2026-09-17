@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Skeleton } from "@/components/ui/skeleton";
 import { RegretMinerAnimation } from "@/components/regret-miner-animation";
 import { EverydayComparisonList } from "@/components/everyday-comparison-list";
+import { AptLocationMap } from "@/components/apt-location-map";
 import { formatManwon } from "@/lib/apt-trades/format";
 import {
   averageDealAmountByYear,
@@ -90,6 +91,14 @@ export default function Home() {
     () => (trades && aptName ? filterByApartment(trades, aptName) : []),
     [trades, aptName],
   );
+  const aptAddress = useMemo(() => {
+    if (!aptName || aptTrades.length === 0) return null;
+    const district = SEOUL_DISTRICTS.find((d) => d.code === districtCode);
+    const representative = aptTrades[0];
+    if (!district || !representative.dong || !representative.jibun) return null;
+    return `서울 ${district.name} ${representative.dong} ${representative.jibun}`;
+  }, [aptName, aptTrades, districtCode]);
+
   const areas = useMemo(() => listExclusiveAreas(aptTrades), [aptTrades]);
   const areaTrades = useMemo(
     () => (area !== null ? filterByExclusiveArea(aptTrades, area) : []),
@@ -182,6 +191,13 @@ export default function Home() {
                     </ComboboxContent>
                   </Combobox>
                   <FieldDescription>이 구에서 실거래 기록이 있는 단지만 검색됩니다.</FieldDescription>
+                </Field>
+              )}
+
+              {aptAddress && (
+                <Field>
+                  <FieldLabel>단지 위치</FieldLabel>
+                  <AptLocationMap address={aptAddress} />
                 </Field>
               )}
 
