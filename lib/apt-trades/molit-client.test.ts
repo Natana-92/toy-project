@@ -1,12 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  fetchDistrictTrades,
-  fetchMonthlyTrades,
-  listYearMonthsSince,
-  MolitApiError,
-  monthsBefore,
-  parseAptTradeXml,
-} from "./molit-client";
+import { fetchDistrictTrades, fetchMonthlyTrades, listYearMonthsSince, MolitApiError, parseAptTradeXml } from "./molit-client";
 
 const SAMPLE_XML = `<response>
   <header>
@@ -171,20 +164,6 @@ describe("listYearMonthsSince", () => {
     const until = new Date(2025, 0, 15); // 2025-01-15, 로컬 월은 0-based
 
     expect(listYearMonthsSince({ year: 2024, month: 11 }, until)).toEqual(["202411", "202412", "202501"]);
-  });
-});
-
-describe("monthsBefore", () => {
-  it("기준 시점에서 지정한 개월 수만큼 이전의 연월을 계산한다", () => {
-    const from = new Date(2026, 8, 17); // 2026-09-17, 로컬 월은 0-based
-
-    expect(monthsBefore(24, from)).toEqual({ year: 2024, month: 9 });
-  });
-
-  it("연도를 넘어가는 개월 수도 올바르게 계산한다", () => {
-    const from = new Date(2026, 1, 10); // 2026-02-10
-
-    expect(monthsBefore(3, from)).toEqual({ year: 2025, month: 11 });
   });
 });
 
