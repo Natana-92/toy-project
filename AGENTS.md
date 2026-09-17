@@ -48,3 +48,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 인증키는 공공데이터포털 활용신청으로 자동 승인된다. 실제 활용신청 상세 화면 기준 일일 트래픽은 10,000회다(신청 상품·계정에 따라 달라질 수 있으니 마이페이지에서 확인). 같은 (법정동 코드, 계약년월) 조합은 캐시해서 재호출을 피한다.
 - 정상 응답의 `resultCode`는 `"00"`이 아니라 `"000"`(세 자리)이다. 실제 라이브 호출로 확인했다(2026-09-17).
 - 인증키 오류·트래픽 초과·**초당 요청 수 초과**(`LIMITED_NUMBER_OF_SERVICE_REQUESTS_PER_SECOND_EXCEEDS_ERROR`) 같은 공통 오류는 `<response><header>` 구조가 아니라 `<OpenAPI_ServiceResponse><cmmMsgHeader>` 구조로 내려온다. 한 사용자 조회가 여러 달을 동시에 병렬 호출하면 이 초당 제한에 쉽게 걸리므로, 월별 호출은 작은 배치로 나누고 배치 사이에 지연을 둔다.
+
+# 외부 API — 카카오맵 · 카카오 로컬(Local) API
+
+- 공식 소스: [Kakao Maps Web API 가이드](https://apis.map.kakao.com/web/guide/)(지도 SDK), [Kakao Developers 로컬 API 문서](https://developers.kakao.com/docs/latest/ko/local/dev-guide)(주소→좌표 변환). 이 API들을 다루는 작업을 시작하기 전에 두 페이지에서 최신 명세를 확인한다. 공식 벤더 스킬은 확인 결과 존재하지 않는다(2026-09-17 기준, 검색된 것은 모두 install count 한 자릿수의 비공식 커뮤니티 스킬뿐).
+- 아파트 단지 위치 표시 용도로 채택했다: 국토부 실거래 데이터의 법정동(`umdNm`)·지번(`jibun`)으로 지번 주소 문자열을 만들고, 카카오 로컬 API `GET https://dapi.kakao.com/v2/local/search/address.json?query=...`(헤더 `Authorization: KakaoAK {REST_API_KEY}`)로 좌표(`documents[].x`=경도, `documents[].y`=위도)를 얻은 뒤, 카카오맵 JavaScript SDK(`//dapi.kakao.com/v2/maps/sdk.js?appkey={JS_KEY}`)로 지도와 마커를 그린다.
+- 키가 두 종류로 분리된다. REST API 키(주소→좌표 변환, 서버 전용, 절대 클라이언트에 노출하지 않는다)와 JavaScript 키(지도 SDK, 클라이언트에서 쓰므로 `NEXT_PUBLIC_` 접두사 환경변수로 노출해도 되는 키). 둘 다 카카오 개발자센터(developers.kakao.com)에서 애플리케이션을 만들면 함께 발급된다.
+- JavaScript 키를 실제로 쓰려면 카카오 개발자센터의 해당 애플리케이션 "플랫폼" 설정에 사용할 도메인(`http://localhost:3000`, 배포된 Vercel 도메인)을 등록해야 한다. 등록하지 않은 도메인에서는 지도가 로드되지 않는다.
