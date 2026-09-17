@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: "지원하지 않는 지역입니다. 서울 25개 구 중에서 선택해 주세요." }, { status: 400 });
   }
 
-  const serviceKey = process.env.MOLIT_SERVICE_KEY;
+  // 환경변수 입력 과정에서 실수로 앞뒤 공백·줄바꿈이 섞여 들어가는 경우가 흔해 방어적으로 trim한다.
+  const serviceKey = process.env.MOLIT_SERVICE_KEY?.trim();
   if (!serviceKey) {
     return Response.json(
       { error: "서버에 국토부 API 인증키(MOLIT_SERVICE_KEY)가 설정되어 있지 않습니다." },
