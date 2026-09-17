@@ -47,6 +47,8 @@ export function parseAptTradeXml(xml: string): AptTrade[] {
     dealYear: toNumber(item.dealYear),
     dealMonth: toNumber(item.dealMonth),
     dealDay: toNumber(item.dealDay),
+    dong: String(item.umdNm ?? "").trim(),
+    jibun: String(item.jibun ?? "").trim(),
   }));
 }
 

@@ -19,6 +19,8 @@ function trade(overrides: Partial<AptTrade>): AptTrade {
     dealYear: 2020,
     dealMonth: 1,
     dealDay: 1,
+    dong: "역삼동",
+    jibun: "1",
     ...overrides,
   };
 }

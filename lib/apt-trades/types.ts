@@ -9,4 +9,8 @@ export type AptTrade = {
   dealYear: number;
   dealMonth: number;
   dealDay: number;
+  /** 법정동명(예: "숭인동"). 지도 표시를 위한 지번 주소 조합에 쓴다. */
+  dong: string;
+  /** 지번(예: "766"). 법정동명과 합쳐 지번 주소를 만든다. */
+  jibun: string;
 };
