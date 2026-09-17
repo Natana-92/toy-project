@@ -94,6 +94,18 @@ export function listYearMonthsSince(start: { year: number; month: number }, unti
 /** 국토부 실거래가 공개 제도가 시작된 연월. */
 export const TRADE_DISCLOSURE_START = { year: 2006, month: 1 };
 
+/** 아파트 단지 목록을 빠르게 보여주기 위해 먼저 조회하는 최근 기간(개월). 나머지 과거 데이터는
+ * 이 응답 이후 백그라운드로 이어받는다. */
+export const RECENT_TRADES_WINDOW_MONTHS = 24;
+
+/** 기준 시점(from, 기본값 현재)에서 months개월 전의 연월을 계산한다. */
+export function monthsBefore(months: number, from: Date = new Date()): { year: number; month: number } {
+  const totalMonths = from.getFullYear() * 12 + from.getMonth() - months;
+  const year = Math.floor(totalMonths / 12);
+  const month = totalMonths - year * 12 + 1;
+  return { year, month };
+}
+
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
