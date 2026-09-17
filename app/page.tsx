@@ -1,70 +1,285 @@
-import Image from "next/image";
-import { buttonVariants } from "@/components/ui/button";
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RegretMinerAnimation } from "@/components/regret-miner-animation";
+import { formatManwon } from "@/lib/apt-trades/format";
+import {
+  averageDealAmountByYear,
+  calcRegretResult,
+  filterByApartment,
+  filterByExclusiveArea,
+  latestDeal,
+  listApartmentNames,
+  listDealYears,
+  listExclusiveAreas,
+} from "@/lib/apt-trades/regret";
+import { SEOUL_DISTRICTS } from "@/lib/apt-trades/seoul-districts";
+import type { AptTrade } from "@/lib/apt-trades/types";
+
+const districtSelectItems = [
+  { label: "구를 선택해 주세요", value: null as string | null },
+  ...SEOUL_DISTRICTS.map((district) => ({ label: district.name, value: district.code })),
+];
 
 export default function Home() {
+  const [districtCode, setDistrictCode] = useState<string | null>(null);
+  const [trades, setTrades] = useState<AptTrade[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [aptName, setAptName] = useState<string | null>(null);
+  const [area, setArea] = useState<number | null>(null);
+  const [year, setYear] = useState<number | null>(null);
+  const [salaryInput, setSalaryInput] = useState("");
+
+  async function handleDistrictChange(code: string | null) {
+    setDistrictCode(code);
+    setTrades(null);
+    setAptName(null);
+    setArea(null);
+    setYear(null);
+    setLoadError(null);
+
+    if (!code) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/trades?region=${code}`);
+      const body = await response.json();
+      if (!response.ok) {
+        setLoadError(body.error ?? "실거래 데이터를 불러오지 못했습니다.");
+        return;
+      }
+      setTrades(body.trades as AptTrade[]);
+    } catch {
+      setLoadError("실거래 데이터를 불러오지 못했습니다. 네트워크 상태를 확인해 주세요.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleAptChange(next: string | null) {
+    setAptName(next);
+    setArea(null);
+    setYear(null);
+  }
+
+  function handleAreaChange(next: number | null) {
+    setArea(next);
+    setYear(null);
+  }
+
+  const apartments = useMemo(() => (trades ? listApartmentNames(trades) : []), [trades]);
+  const aptTrades = useMemo(
+    () => (trades && aptName ? filterByApartment(trades, aptName) : []),
+    [trades, aptName],
+  );
+  const areas = useMemo(() => listExclusiveAreas(aptTrades), [aptTrades]);
+  const areaTrades = useMemo(
+    () => (area !== null ? filterByExclusiveArea(aptTrades, area) : []),
+    [aptTrades, area],
+  );
+  const years = useMemo(() => listDealYears(areaTrades), [areaTrades]);
+
+  const areaSelectItems = useMemo(
+    () =>
+      areas.map((value) => ({
+        label: `${value}㎡ (약 ${Math.round((value / 3.3058) * 10) / 10}평)`,
+        value,
+      })),
+    [areas],
+  );
+  const yearSelectItems = useMemo(() => years.map((value) => ({ label: `${value}년`, value })), [years]);
+
+  const pastAmount = year !== null ? averageDealAmountByYear(areaTrades, year) : undefined;
+  const latest = latestDeal(areaTrades);
+  const parsedSalary = salaryInput.trim() === "" ? undefined : Number(salaryInput);
+  const monthlySalary = parsedSalary !== undefined && parsedSalary > 0 ? parsedSalary : undefined;
+  const result =
+    pastAmount !== undefined && latest
+      ? calcRegretResult({ pastAmount, currentAmount: latest.dealAmount, monthlySalary })
+      : undefined;
+  const noComparison = year !== null && (pastAmount === undefined || !latest);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="flex flex-1 flex-col items-center bg-zinc-50 py-16 dark:bg-black">
+      <main className="flex w-full max-w-2xl flex-col gap-8 px-4">
+        <header className="flex flex-col gap-2 text-center">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">그때 샀더라면</h1>
+          <p className="text-muted-foreground">
+            서울 아파트 단지와 매수 연도를 고르면, 지금 시세와의 차액을 월급 몇 년치로 보여드립니다.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className={buttonVariants({ size: "lg", className: "w-full md:w-[158px]" })}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              data-icon="inline-start"
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={buttonVariants({ variant: "outline", size: "lg", className: "w-full md:w-[158px]" })}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+        </header>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>어디, 언제, 얼마에 샀다면</CardTitle>
+            <CardDescription>국토교통부 아파트 매매 실거래가를 기준으로 계산합니다.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
+              <Field>
+                <FieldLabel>지역(구)</FieldLabel>
+                <Select
+                  items={districtSelectItems}
+                  value={districtCode}
+                  onValueChange={(next) => handleDistrictChange(next as string | null)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {districtSelectItems.map((item) => (
+                        <SelectItem key={item.value ?? "placeholder"} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+
+              {loading && <Skeleton className="h-9 w-full" />}
+
+              {loadError && (
+                <Alert variant="destructive">
+                  <AlertTitle>일시적으로 조회할 수 없습니다</AlertTitle>
+                  <AlertDescription>{loadError}</AlertDescription>
+                </Alert>
+              )}
+
+              {trades && !loadError && (
+                <Field>
+                  <FieldLabel>아파트 단지</FieldLabel>
+                  <Combobox items={apartments} value={aptName} onValueChange={handleAptChange}>
+                    <ComboboxInput placeholder="단지명을 검색해 주세요" />
+                    <ComboboxContent>
+                      <ComboboxEmpty>일치하는 단지가 없습니다.</ComboboxEmpty>
+                      <ComboboxList>
+                        {(item) => (
+                          <ComboboxItem key={item} value={item}>
+                            {item}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                  <FieldDescription>이 구에서 실거래 기록이 있는 단지만 검색됩니다.</FieldDescription>
+                </Field>
+              )}
+
+              {aptName && (
+                <Field>
+                  <FieldLabel>전용면적(㎡)</FieldLabel>
+                  <Select
+                    items={areaSelectItems}
+                    value={area}
+                    onValueChange={(next) => handleAreaChange(next as number | null)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="평형을 선택해 주세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {areaSelectItems.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+
+              {area !== null && (
+                <Field>
+                  <FieldLabel>매수 연도</FieldLabel>
+                  <Select
+                    items={yearSelectItems}
+                    value={year}
+                    onValueChange={(next) => setYear(next as number | null)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="실제 거래가 있었던 연도만 표시됩니다" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {yearSelectItems.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+
+              {year !== null && (
+                <Field>
+                  <FieldLabel htmlFor="monthly-salary">월급(만원, 선택)</FieldLabel>
+                  <Input
+                    id="monthly-salary"
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="예: 300"
+                    value={salaryInput}
+                    onChange={(event) => setSalaryInput(event.target.value)}
+                  />
+                  <FieldDescription>입력하면 차액을 월급 몇 년치로 환산해 보여드립니다.</FieldDescription>
+                </Field>
+              )}
+            </FieldGroup>
+          </CardContent>
+        </Card>
+
+        {noComparison && (
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>비교할 수 없습니다</EmptyTitle>
+              <EmptyDescription>이 평형은 최근 실거래 기록이 없어 현재 시세를 확인할 수 없습니다.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        )}
+
+        {result && latest && year !== null && (
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {year}년에 샀다면 지금 {result.diffAmount >= 0 ? "+" : ""}
+                {formatManwon(result.diffAmount)}
+              </CardTitle>
+              <CardDescription>
+                {year}년 평균 매매가 {formatManwon(pastAmount ?? 0)} → 최근 실거래가 {formatManwon(latest.dealAmount)}
+              </CardDescription>
+            </CardHeader>
+            {result.yearsOfSalary !== undefined && (
+              <CardContent className="flex flex-col gap-4">
+                <p className="text-lg font-medium">
+                  월급 {Math.abs(result.yearsOfSalary).toFixed(1)}년치{result.yearsOfSalary < 0 ? "를 손해 봤네요" : "입니다"}
+                </p>
+                <RegretMinerAnimation years={Math.abs(result.yearsOfSalary)} />
+              </CardContent>
+            )}
+          </Card>
+        )}
       </main>
     </div>
   );
