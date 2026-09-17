@@ -1,4 +1,4 @@
-import { fetchDistrictTrades, MolitApiError } from "@/lib/apt-trades/molit-client";
+import { fetchDistrictTrades, monthsBefore, MolitApiError } from "@/lib/apt-trades/molit-client";
 import { isValidSeoulDistrictCode } from "@/lib/apt-trades/seoul-districts";
 import type { NextRequest } from "next/server";
 
@@ -13,6 +13,18 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: "지원하지 않는 지역입니다. 서울 25개 구 중에서 선택해 주세요." }, { status: 400 });
   }
 
+  // 아파트 목록을 빠르게 보여주기 위해 먼저 최근 N개월만 조회하고, 이후 전체 기간을 다시 요청받는다.
+  // 생략하면 2006년부터 현재까지 전체를 조회한다(기존 동작과 동일).
+  const sinceMonthsParam = request.nextUrl.searchParams.get("sinceMonths");
+  let since: { year: number; month: number } | undefined;
+  if (sinceMonthsParam !== null) {
+    const sinceMonths = Number(sinceMonthsParam);
+    if (!Number.isInteger(sinceMonths) || sinceMonths <= 0) {
+      return Response.json({ error: "sinceMonths는 1 이상의 정수여야 합니다." }, { status: 400 });
+    }
+    since = monthsBefore(sinceMonths);
+  }
+
   // 환경변수 입력 과정에서 실수로 앞뒤 공백·줄바꿈이 섞여 들어가는 경우가 흔해 방어적으로 trim한다.
   const serviceKey = process.env.MOLIT_SERVICE_KEY?.trim();
   if (!serviceKey) {
@@ -23,7 +35,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const trades = await fetchDistrictTrades({ regionCode: region, serviceKey });
+    const trades = await fetchDistrictTrades({ regionCode: region, serviceKey, since });
     return Response.json({ trades });
   } catch (error) {
     if (error instanceof MolitApiError) {
