@@ -100,7 +100,9 @@ function delay(ms: number): Promise<void> {
 
 // 국토부 API는 초당 요청 수 제한(LIMITED_NUMBER_OF_SERVICE_REQUESTS_PER_SECOND_EXCEEDS_ERROR)이 있어
 // 완전 병렬 호출 시 대부분 거부당한다. 작은 배치로 나누고 배치 사이에 지연을 둔다.
-const MONTHLY_FETCH_BATCH_SIZE = 3;
+// 배치 크기 8·지연 200ms는 라이브 테스트에서 여러 차례 "초당 서비스 요청제한 횟수 초과"로 거부당했다.
+// 5·300ms는 같은 방식(2006년~현재 약 249개월)으로 반복 테스트해도 안정적으로 통과했다(2026-09-17 확인).
+const MONTHLY_FETCH_BATCH_SIZE = 5;
 const MONTHLY_FETCH_BATCH_DELAY_MS = 300;
 
 /**
