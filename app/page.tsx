@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RegretMinerAnimation } from "@/components/regret-miner-animation";
+import { EverydayComparisonList } from "@/components/everyday-comparison-list";
 import { formatManwon } from "@/lib/apt-trades/format";
 import {
   averageDealAmountByYear,
@@ -270,14 +271,18 @@ export default function Home() {
                 {year}년 평균 매매가 {formatManwon(pastAmount ?? 0)} → 최근 실거래가 {formatManwon(latest.dealAmount)}
               </CardDescription>
             </CardHeader>
-            {result.yearsOfSalary !== undefined && (
-              <CardContent className="flex flex-col gap-4">
-                <p className="text-lg font-medium">
-                  월급 {Math.abs(result.yearsOfSalary).toFixed(1)}년치{result.yearsOfSalary < 0 ? "를 손해 봤네요" : "입니다"}
-                </p>
-                <RegretMinerAnimation years={Math.abs(result.yearsOfSalary)} />
-              </CardContent>
-            )}
+            <CardContent className="flex flex-col gap-4">
+              <EverydayComparisonList amountInManwon={Math.abs(result.diffAmount)} />
+              {result.yearsOfSalary !== undefined && (
+                <>
+                  <p className="text-lg font-medium">
+                    월급 {Math.abs(result.yearsOfSalary).toFixed(1)}년치
+                    {result.yearsOfSalary < 0 ? "를 손해 봤네요" : "입니다"}
+                  </p>
+                  <RegretMinerAnimation years={Math.abs(result.yearsOfSalary)} />
+                </>
+              )}
+            </CardContent>
           </Card>
         )}
       </main>
