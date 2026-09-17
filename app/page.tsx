@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Combobox,
   ComboboxContent,
@@ -30,7 +30,6 @@ import {
   listDealYears,
   listExclusiveAreas,
 } from "@/lib/apt-trades/regret";
-import { RECENT_TRADES_WINDOW_MONTHS } from "@/lib/apt-trades/molit-client";
 import { SEOUL_DISTRICTS } from "@/lib/apt-trades/seoul-districts";
 import type { AptTrade } from "@/lib/apt-trades/types";
 
@@ -44,67 +43,35 @@ export default function Home() {
   const [trades, setTrades] = useState<AptTrade[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const [historyError, setHistoryError] = useState<string | null>(null);
 
   const [aptName, setAptName] = useState<string | null>(null);
   const [area, setArea] = useState<number | null>(null);
   const [year, setYear] = useState<number | null>(null);
   const [salaryInput, setSalaryInput] = useState("");
 
-  // 구를 바꾸는 도중에 이전 요청 응답이 늦게 도착해 최신 선택을 덮어쓰지 않도록 순번으로 구분한다.
-  const requestIdRef = useRef(0);
-
   async function handleDistrictChange(code: string | null) {
-    const requestId = ++requestIdRef.current;
     setDistrictCode(code);
     setTrades(null);
     setAptName(null);
     setArea(null);
     setYear(null);
     setLoadError(null);
-    setHistoryError(null);
 
     if (!code) return;
 
-    // 1단계: 최근 기간만 빠르게 받아 아파트 목록을 먼저 보여준다.
     setLoading(true);
-    let recentTrades: AptTrade[] | null = null;
-    try {
-      const response = await fetch(`/api/trades?region=${code}&sinceMonths=${RECENT_TRADES_WINDOW_MONTHS}`);
-      const body = await response.json();
-      if (requestIdRef.current !== requestId) return;
-      if (!response.ok) {
-        setLoadError(body.error ?? "실거래 데이터를 불러오지 못했습니다.");
-      } else {
-        recentTrades = body.trades as AptTrade[];
-        setTrades(recentTrades);
-      }
-    } catch {
-      if (requestIdRef.current !== requestId) return;
-      setLoadError("실거래 데이터를 불러오지 못했습니다. 네트워크 상태를 확인해 주세요.");
-    } finally {
-      if (requestIdRef.current === requestId) setLoading(false);
-    }
-
-    if (!recentTrades) return;
-
-    // 2단계: 2006년부터의 전체 기간을 백그라운드로 이어받아 과거 연도 비교를 가능하게 한다.
-    setLoadingHistory(true);
     try {
       const response = await fetch(`/api/trades?region=${code}`);
       const body = await response.json();
-      if (requestIdRef.current !== requestId) return;
-      if (response.ok) {
-        setTrades(body.trades as AptTrade[]);
-      } else {
-        setHistoryError(body.error ?? "과거 실거래 데이터를 모두 불러오지 못했습니다.");
+      if (!response.ok) {
+        setLoadError(body.error ?? "실거래 데이터를 불러오지 못했습니다.");
+        return;
       }
+      setTrades(body.trades as AptTrade[]);
     } catch {
-      if (requestIdRef.current !== requestId) return;
-      setHistoryError("과거 실거래 데이터를 모두 불러오지 못했습니다.");
+      setLoadError("실거래 데이터를 불러오지 못했습니다. 네트워크 상태를 확인해 주세요.");
     } finally {
-      if (requestIdRef.current === requestId) setLoadingHistory(false);
+      setLoading(false);
     }
   }
 
@@ -223,21 +190,8 @@ export default function Home() {
                       </ComboboxList>
                     </ComboboxContent>
                   </Combobox>
-                  <FieldDescription>
-                    {loadingHistory
-                      ? `최근 ${RECENT_TRADES_WINDOW_MONTHS}개월 기준 목록입니다. 2006년까지의 과거 기록을 마저 불러오는 중입니다...`
-                      : "이 구에서 실거래 기록이 있는 단지만 검색됩니다."}
-                  </FieldDescription>
+                  <FieldDescription>이 구에서 실거래 기록이 있는 단지만 검색됩니다.</FieldDescription>
                 </Field>
-              )}
-
-              {historyError && (
-                <Alert variant="destructive">
-                  <AlertTitle>과거 기록을 모두 불러오지 못했습니다</AlertTitle>
-                  <AlertDescription>
-                    {historyError} 최근 {RECENT_TRADES_WINDOW_MONTHS}개월 기록만으로 비교합니다.
-                  </AlertDescription>
-                </Alert>
               )}
 
               {aptAddress && (
